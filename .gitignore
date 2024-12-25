@@ -1,0 +1,4 @@
+.env
+postgreSQL_DB
+logfile
+data_ingestion/__pycache__
