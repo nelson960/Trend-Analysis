@@ -1,6 +1,0 @@
-.env
-postgreSQL_DB/
-logfile
-data_ingestion/__pycache__
-temp/
-data_lake/
