@@ -2,4 +2,5 @@
 postgreSQL_DB
 logfile
 data_ingestion/__pycache__
-./temp/tweets_trend_analysis.csv
+temp
+data_lake/
