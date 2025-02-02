@@ -4,6 +4,7 @@ from data_processing.services.tweet_processor import process_tweets, count_brand
 from data_processing.services.tweets_cleaner import process_tweets_column
 from data_processing.services.engagement_score import calculate_engagement_score, get_brand_trends
 from data_processing.services.forecast import forecast_trends
+# from streamlit_app.app import visualize_forecast
 
 import pandas as pd
 
@@ -15,7 +16,7 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 		try:
 			#step 1: load raw tweet data from the data lake
-			raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/trend_analysis/data_lake/raw_tweets/tweets_data_mini.parquet"
+			raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/temp/test_data_set.parquet"
 			self.stdout.write(f"Loading raw data from: {raw_data_path}")
 			raw_data = load_raw_data(raw_data_path)
 			
@@ -34,6 +35,7 @@ class Command(BaseCommand):
 			self.stdout.write("forcasting trends")
 			df = forecast_trends(F_data, 30)
 			df.to_parquet("mini_final_with_trends.parquet", index=False)
-
+			# df = pd.read_parquet("/Users/nelson/py/ml_App/trend-analysis/trend_analysis/mini_final_with_trends.parquet")
+			# visualize_forecast(df)
 		except Exception as e:
 			self.stderr.write(f"An error occured: {e}")
