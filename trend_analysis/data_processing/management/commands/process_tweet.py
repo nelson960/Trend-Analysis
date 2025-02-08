@@ -16,7 +16,7 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 		try:
 			#step 1: load raw tweet data from the data lake
-			raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/temp/test_data_set.parquet"
+			raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/temp/mini_tweets_trend_analysis.parquet"
 			self.stdout.write(f"Loading raw data from: {raw_data_path}")
 			raw_data = load_raw_data(raw_data_path)
 			
@@ -35,7 +35,5 @@ class Command(BaseCommand):
 			self.stdout.write("forcasting trends")
 			df = forecast_trends(F_data, 30)
 			df.to_parquet("mini_final_with_trends.parquet", index=False)
-			# df = pd.read_parquet("/Users/nelson/py/ml_App/trend-analysis/trend_analysis/mini_final_with_trends.parquet")
-			# visualize_forecast(df)
 		except Exception as e:
 			self.stderr.write(f"An error occured: {e}")

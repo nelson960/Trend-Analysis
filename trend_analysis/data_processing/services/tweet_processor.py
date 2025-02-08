@@ -50,24 +50,22 @@ def extract_brand_mentions(tweet: str, matcher: Matcher):
 		logger.error(f"Error processing tweet: {e}")
 		return None, None
 	
-def analyze_sentiment(tweet: str):
+def analyze_sentiment(tweet: str) ->float:
 	"""
-	Analyse sentiment of a tweet.
-	
-	Args:
-		tweet (str): Input tweet text
-	
-	Returns:
-		str: Sentiment classification (Positive, Negative, Neutral)
+	Analyze sentiment of a tweet and return a continuous score.
+    
+    Args:
+        tweet (str): Input tweet text
+    
+    Returns:
+        float: Sentiment score between -1 and 1
+            -1: Most negative
+             0: Neutral
+            +1: Most positive
 	"""
 	analysis = TextBlob(tweet)
-	#Fixed sentiment logic
-	if analysis.sentiment.polarity > 0:
-		return "Positive"
-	elif analysis.sentiment.polarity < 0:
-		return "Negative"
-	else:
-		return "Neutral"
+	# TextBlob.sentiment.polarity already returns a value between -1 and 1
+	return analysis.sentiment.polarity
 	
 def process_tweets(data: pd.DataFrame, brands: list):
 	"""

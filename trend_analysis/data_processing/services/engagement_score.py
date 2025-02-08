@@ -1,48 +1,74 @@
 import pandas as pd
+import numpy as np
+from sklearn.preprocessing import RobustScaler, StandardScaler
+from sklearn.ensemble import RandomForestRegressor
 
-def sentiment_impact(sentiment: str) ->float:
-	if sentiment == "Positive":
-		return 0.1
-	elif sentiment == "Negative":
-		return -0.1
-	else:
-		return 0.0
 
-def calculate_engagement_score(df: pd.DataFrame) ->pd.Series:
-	"""
-    Calculate the engagement score for each tweet considering likes, replies, retweets, views, sentiment, and followers count.
+def calculate_engagement_score(df: pd.DataFrame, target: str = "sentiment") -> pd.DataFrame:
+    df = df.copy()
 
-    Args:
-        df (pd.DataFrame): DataFrame containing tweet data with respective columns.
+    # Initialize scalers
+    robust_scaler = RobustScaler()
+    standard_scaler = StandardScaler()
 
-    Returns:
-        pd.Series: A series with engagement scores for each tweet.
-    """
-	# Define weights for each engagement metric
-	like_weight = 0.3
-	reply_weight = 0.2
-	retweet_weight = 0.2
-	view_weight = 0.1
-	sentiment_weight = 0.1  # Sentiment influence on engagement score
-	followers_weight = 0.1  # Followers influence on engagement score
+    # Apply robust scaling to followersCount
+    df[['followersCount']] = robust_scaler.fit_transform(df[['followersCount']])
 
-    # Normalize followers count
-	max_followers = df['followersCount'].max()
-	min_followers = df['followersCount'].min()
-	followers_range = max_followers - min_followers if max_followers != min_followers else 1
+    # Define and scale engagement features in one operation
+    engagement_features = ['likeCount', 'replyCount', 'retweetCount', 'viewCount']
+    df[engagement_features] = standard_scaler.fit_transform(df[engagement_features])
 
-    # Calculate engagement score for each tweet
-	df = df.copy()
-	df.loc[:, 'engagement_score'] = (
-		df['likeCount'] * like_weight +
-		df['replyCount'] * reply_weight +
-		df['retweetCount'] * retweet_weight +
-		df['viewCount'] * view_weight +
-		df['sentiment'].apply(sentiment_impact) * sentiment_weight +
-		((df['followersCount'] - min_followers) / followers_range) * followers_weight
-	)
+    # Vectorized sentiment transformation
+    df['sentiment_impact'] = np.tanh(df['sentiment'] * 2)  
 
-	return df
+    if target is not None and target in df.columns:
+        features = engagement_features + ['sentiment_impact', 'followersCount']
+        X = df[features]
+        y = df[target]
+
+        model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+        model.fit(X, y)
+
+        weights = model.feature_importances_
+        weights /= weights.sum()
+        weight_dict = dict(zip(features, weights))
+        df.attrs['weights_used'] = weight_dict
+    else:
+        weight_dict = {
+            'likeCount': 0.3,
+            'replyCount': 0.2,
+            'retweetCount': 0.2,
+            'viewCount': 0.1,
+            'sentiment_impact': 0.1,  # <--- Updated key
+            'followersCount': 0.1
+        }
+
+    # Calculate engagement score using vectorized operations
+    df['engagement_score'] = (
+        df['likeCount'] * weight_dict['likeCount'] +
+        df['replyCount'] * weight_dict['replyCount'] +
+        df['retweetCount'] * weight_dict['retweetCount'] +
+        df['viewCount'] * weight_dict['viewCount'] +
+        df['sentiment_impact'] * weight_dict['sentiment_impact'] +  # <--- Use precomputed values
+        df['followersCount'] * weight_dict['followersCount']
+    )
+
+    # Store scaling statistics
+    df.attrs['scaling_stats'] = {
+        'followers': robust_scaler.get_params(),
+        'engagement_metrics': {
+            feature: {
+                'mean': standard_scaler.mean_[i],
+                'scale': standard_scaler.scale_[i]
+            }
+            for i, feature in enumerate(engagement_features)
+        }
+    }
+
+    return df[['date', 'likeCount', 'replyCount', 'retweetCount', 'viewCount',
+              'followersCount', 'tweets', 'brand', 'sentiment', 'engagement_score']]
+
+
 
 def get_brand_trends(df: pd.DataFrame, predefined_brands: list) -> pd.DataFrame:
     """

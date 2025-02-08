@@ -4,6 +4,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 def visualize_forecast(df: pd.DataFrame):
+    """
+    Visulize historical and forecast data for brand engagement.
+    """
+    st.title("Brand Engagement Analysis & Forecast")
+    # Data checks
     if df.empty:
         st.error("No data available")
         return
@@ -14,10 +19,11 @@ def visualize_forecast(df: pd.DataFrame):
         return
 
     try:
-        df["ds"] = pd.to_datetime(df["ds"])
+        df["ds"] = pd.to_datetime(df["ds"]) 
         brands = sorted(df["brand"].unique())
-
-        st.sidebar.header("Analysis Controls")
+        
+        # Sidebar for multiple selections
+        st.sidebar.header("Analysis Controls") 
         selected_brands = st.sidebar.multiselect(
             "Select Brands",
             brands,
@@ -29,7 +35,8 @@ def visualize_forecast(df: pd.DataFrame):
             return
 
         filtered_data = df[df["brand"].isin(selected_brands)].copy()
-
+        
+        # Create line plot for forecast data
         fig = px.line(
             filtered_data,
             x="ds",
@@ -39,13 +46,14 @@ def visualize_forecast(df: pd.DataFrame):
             title="Brand Engagement Forecast",
             labels={"ds": "Date", "yhat": "Predicted Value", "brand": "Brand"}
         )
-
+        # Add actual data points for each selected brand
         for brand in selected_brands:
             actuals = filtered_data[
                 (filtered_data["brand"] == brand) & 
                 (filtered_data["type"] == "actual")
             ]
             
+            # Add scatter points for actual values if available
             if "y" in actuals.columns and not actuals.empty:
                 fig.add_trace(
                     go.Scatter(
@@ -56,7 +64,7 @@ def visualize_forecast(df: pd.DataFrame):
                         marker=dict(size=8)
                     )
                 )
-
+        # Customize plot layout
         fig.update_layout(
             height=600,
             template="plotly_white",
@@ -64,18 +72,23 @@ def visualize_forecast(df: pd.DataFrame):
             xaxis=dict(rangeslider=dict(visible=True))
         )
 
+        # Display interactive Plotly chart
         st.plotly_chart(fig, use_container_width=True)
 
+        # Create columns for brand-specific metrics
         cols = st.columns(len(selected_brands))
         for idx, brand in enumerate(selected_brands):
             brand_data = filtered_data[filtered_data["brand"] == brand]
-            
+
+            # Display brand-specific statistics
             with cols[idx]:
                 st.subheader(brand)
                 if "y" in brand_data.columns:
+                    # Calculate and display actual average
                     actuals = brand_data[brand_data["type"] == "actual"]["y"]
                     st.metric("Actual Average", f"{actuals.mean():.2f}" if not actuals.empty else "N/A")
                 
+                # Calculate and display forecast average 
                 forecasts = brand_data[brand_data["type"] == "forecasted"]["yhat"]
                 st.metric("Forecast Average", f"{forecasts.mean():.2f}" if not forecasts.empty else "N/A")
 
