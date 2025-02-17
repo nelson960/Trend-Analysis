@@ -80,7 +80,7 @@ def run_pipeline():
             progress_bar.progress(50)
 
             enSc_output = calculate_engagement_score(processed_data)
-            enSc_output_F = os.path.join(PROJECT_DIR, "data_lake/engagement_score", "mini_final_with_trends.parquet")
+            enSc_output_F = os.path.join(PROJECT_DIR, "data_lake/engagement_score", "engagement_score.parquet")
             enSc_output.to_parquet(enSc_output_F, index=False)
             if not st.session_state.running:
                 return
@@ -94,10 +94,11 @@ def run_pipeline():
                 return
             progress_bar.progress(90)
 
-            output_processed = os.path.join(PROJECT_DIR, "data_lake/processed", "Engagement_score.parquet")
+            output_processed = os.path.join(PROJECT_DIR, "data_lake/processed", "mini_final_with_trends.parquet")
             df.to_parquet(output_processed, index=False)
             if not st.session_state.running:
                 return
+            st.session_state.pipeline_complete = True 
 
             status.update(label="Done!", state="complete")
             progress_bar.progress(100)
@@ -132,3 +133,28 @@ if st.session_state.pipeline_complete:
             st.write("Loading visualization...")
 
 
+# Define file paths
+file1_path = os.path.join(PROJECT_DIR, "data_lake/engagement_score", "engagement_score.parquet")
+file2_path = os.path.join(PROJECT_DIR, "data_lake/processed", "mini_final_with_trends.parquet")
+
+# Function to check if both files exist
+def files_exist():
+    return os.path.exists(file1_path) and os.path.exists(file2_path)
+
+# Function to delete files
+def delete_files():
+    try:
+        os.remove(file1_path)
+        os.remove(file2_path)
+        st.success("Files deleted successfully!")
+    except Exception as e:
+        st.error(f"Error deleting files: {e}")
+
+if files_exist():
+    st.write("✅ Processed files are available.")
+
+    # Add a button to delete files
+    if st.button("Delete Processed Files"):
+        delete_files()
+else:
+    st.write("❌ Processed files not found.")
