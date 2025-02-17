@@ -6,3 +6,5 @@ temp/
 *.log
 *.cache
 *.sqlite3
+*.parquet
+

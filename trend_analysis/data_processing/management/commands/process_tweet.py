@@ -16,7 +16,7 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 		try:
 			#step 1: load raw tweet data from the data lake
-			raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/temp/mini_tweets_trend_analysis.parquet"
+			raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/temp/test_data_set.parquet"
 			self.stdout.write(f"Loading raw data from: {raw_data_path}")
 			raw_data = load_raw_data(raw_data_path)
 			
@@ -30,10 +30,12 @@ class Command(BaseCommand):
 			self.stdout.write(count)
 			self.stdout.write("Calculating engagement score")
 			data_with_score = calculate_engagement_score(processed_data)
-			self.stdout.write("Getting the brand trends")
-			F_data = get_brand_trends(data_with_score, brands)
-			self.stdout.write("forcasting trends")
-			df = forecast_trends(F_data, 30)
-			df.to_parquet("mini_final_with_trends.parquet", index=False)
+			data_with_score.to_parquet("check.parquet", index=False)
+
+			# self.stdout.write("Getting the brand trends")
+			# F_data = get_brand_trends(data_with_score, brands)
+			# self.stdout.write("forcasting trends")
+			# df = forecast_trends(F_data, 30)
+			# df.to_parquet("mini_final_with_trends.parquet", index=False)
 		except Exception as e:
 			self.stderr.write(f"An error occured: {e}")

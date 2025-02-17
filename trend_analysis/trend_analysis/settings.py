@@ -50,8 +50,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-	'data_ingestion',
-	'data_processing'
+	'data_ingestion.apps.DataIngestionConfig',
+	'data_processing.apps.DataProcessingConfig',
+    'corsheaders',
+
 ]
 
 MIDDLEWARE = [
@@ -62,6 +64,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8501",  # Streamlit default port
 ]
 
 ROOT_URLCONF = 'trend_analysis.urls'
