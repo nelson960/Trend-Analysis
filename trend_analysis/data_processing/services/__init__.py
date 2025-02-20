@@ -12,4 +12,5 @@ __all__ = ['load_raw_data',
 		   'calculate_engagement_score',
 		   'get_brand_trends',
 		   'forecast_trends',
-		   'search_multiple_brands']
+		   'search_multiple_brands'
+		   ]
