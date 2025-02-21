@@ -1,7 +1,7 @@
 import os
+import sys
 import streamlit as st
 import pandas as pd
-import sys
 import plotly.graph_objects as go
 from services.data_loader import load_data
 
@@ -22,120 +22,128 @@ from data_processing.services import (
     calculate_engagement_score,
     get_brand_trends,
     forecast_trends,
-    search_multiple_brands  # imported search function
+    search_multiple_brands
 )
 
-st.set_page_config(page_title="Brand Engagement Dashboard", page_icon="🏠", layout="wide")
-st.title("Welcome to the Brand Engagement Dashboard")
+# --- Streamlit Page Config ---
+st.set_page_config(
+    page_title="Brand Engagement Dashboard",
+    page_icon="📊",
+    layout="wide"
+)
 
-# Get input as comma-separated string from the user
-input_string = st.text_input("Enter brands separated by commas")
+# --- Header ---
+st.markdown(
+    "<h1 style='text-align: center; font-size: 36px;'>🚀 Brand Engagement Dashboard</h1>",
+    unsafe_allow_html=True
+)
+# Make the descriptive text bigger
+st.markdown(
+    "<p style='text-align: center; font-size: 24px;'>Analyze brand mentions, engagement, and forecast trends.</p>",
+    unsafe_allow_html=True
+)
+
+# --- Initialize Processing State ---
+if "processing" not in st.session_state:
+    st.session_state.processing = False
+
+# --- User Input ---
+st.markdown("### 🔍 Search for Brands")
+input_string = st.text_input("Enter brand names separated by commas:")
+
+@st.cache_data
+def load_raw_data():
+    raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/temp/test_data_set.parquet"
+    return load_data(raw_data_path)
 
 if input_string:
-    # Split input correctly into words (not characters)
-    brands = [brand.strip().lower() for brand in input_string.split(',') if brand.strip()]
-    
-    # Load data
-    raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/temp/mini_tweets_trend_analysis.parquet"
-    raw_data = load_data(raw_data_path)
-    
-    # Use the search function with a proper list
+    brands = [brand.strip().lower() for brand in input_string.split(",") if brand.strip()]
+    raw_data = load_raw_data()
+
+    # Search brands
     valid_brands, not_available = search_multiple_brands(raw_data, brands)
-    
-    # Display feedback to the user
+
+    # --- Display results ---
     if valid_brands:
-        st.success("Brands available: " + ", ".join(valid_brands))
+        st.success(f"✅ Brands found: {', '.join(valid_brands)}")
     else:
-        st.info("No matching brands found in the tweets column.")
+        st.info("❌ No matching brands found in tweets.")
 
     if not_available:
-        st.warning("The following brands were not found: " + ", ".join(not_available))
+        st.warning(f"⚠️ Brands not found: {', '.join(not_available)}")
 
-    # Continue with your pipeline if there are any valid brands found
+    # --- Process Data Pipeline ---
     if valid_brands:
-        st.title("Starts Processing Data Pipeline")
-        if "running" not in st.session_state:
-            st.session_state.running = False  # Track if the process is running
+        st.markdown("### 🔄 Start Data Processing Pipeline")
+        col1, col2 = st.columns([3, 1])
 
-        if "pipeline_complete" not in st.session_state:
-            st.session_state.pipeline_complete = False  # Track if pipeline has finished
+        with col1:
+            run_pipeline_btn = st.button("🚀 Run Data Processing")
 
-        def run_pipeline():
-            try:
-                with st.status("Processing...", expanded=True) as status:
-                    progress_bar = st.progress(0)
-
-                    st.write("Processing tweets...")
-                    data = process_tweets_column(raw_data, "tweets")
-                    if not st.session_state.running:
-                        return
-                    progress_bar.progress(20)
-
-                    processed_data = process_tweets(data, valid_brands)
-                    if not st.session_state.running:
-                        return
-                    progress_bar.progress(40)
-
-                    count = count_brand_mentions(processed_data)
-                    count_F = os.path.join(PROJECT_DIR, "data_lake/count", "count.parquet")
-                    count.to_parquet(count_F, index=False)
-                    if not st.session_state.running:
-                        return
-                    progress_bar.progress(50)
-
-                    enSc_output = calculate_engagement_score(processed_data)
-                    enSc_output_F = os.path.join(PROJECT_DIR, "data_lake/engagement_score", "engagement_score.parquet")
-                    enSc_output.to_parquet(enSc_output_F, index=False)
-                    if not st.session_state.running:
-                        return
-                    progress_bar.progress(70)
-
-                    F_data = get_brand_trends(enSc_output, valid_brands)
-                    st.write("Forecasting trends for the next 30 days...")
-                    df = forecast_trends(F_data, 30)
-                    st.write("Forecast complete.")
-                    if not st.session_state.running:
-                        return
-                    progress_bar.progress(90)
-
-                    output_processed = os.path.join(PROJECT_DIR, "data_lake/processed", "mini_final_with_trends.parquet")
-                    df.to_parquet(output_processed, index=False)
-                    if not st.session_state.running:
-                        return
-                    st.session_state.pipeline_complete = True 
-
-                    status.update(label="Done!", state="complete")
-                    progress_bar.progress(100)
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-
-        button_label = "Run Data Processing Pipeline" if not st.session_state.running else "Stop Processing"
-
-        if st.button(button_label):
-            st.session_state.running = not st.session_state.running  # Toggle state
-
-            if st.session_state.running:
-                st.write("Starting data processing...")
-                run_pipeline()  # Start processing
-            else:
-                st.write("Processing stopped.")
-
-        if st.session_state.pipeline_complete:
-            st.write("### Next Steps:")
-            col1, col2, col3= st.columns(3)
-            with col1:
-                if st.button("Generate Data Report"):
-                    st.write("Generating report...")
+        # Only show the Stop Processing button if the pipeline is running
+        if st.session_state.processing:
             with col2:
-                if st.button("Visualize Heatmap"):
-                    st.write("Loading visualization...")
-                    st.switch_page("pages/heatmap.py")
-            with col3:
-                if st.button("Engagement Analysis and Forecast"):
-                    st.write("Load Analysis")
-                    st.switch_page("pages/forecast.py")
+                stop_pipeline_btn = st.button("⛔ Stop Processing")
+        else:
+            stop_pipeline_btn = False
 
-        # Define file paths and add functionality to delete processed files
+        # Pipeline Logic
+        if run_pipeline_btn:
+            st.session_state.processing = True
+            with st.spinner("Processing data..."):
+                progress_bar = st.progress(0)
+
+                st.write("🔄 Processing tweets...")
+                data = process_tweets_column(raw_data, "tweets")
+                progress_bar.progress(20)
+
+                processed_data = process_tweets(data, valid_brands)
+                progress_bar.progress(40)
+
+                count = count_brand_mentions(processed_data)
+                count_F = os.path.join(PROJECT_DIR, "data_lake/count", "count.parquet")
+                count.to_parquet(count_F, index=False)
+                progress_bar.progress(50)
+
+                enSc_output = calculate_engagement_score(processed_data)
+                enSc_output_F = os.path.join(PROJECT_DIR, "data_lake/engagement_score", "engagement_score.parquet")
+                enSc_output.to_parquet(enSc_output_F, index=False)
+                progress_bar.progress(70)
+
+                F_data = get_brand_trends(enSc_output, valid_brands)
+                st.write("📊 Forecasting trends for the next 30 days...")
+                df = forecast_trends(F_data, 30)
+                progress_bar.progress(90)
+
+                output_processed = os.path.join(PROJECT_DIR, "data_lake/processed", "mini_final_with_trends.parquet")
+                df.to_parquet(output_processed, index=False)
+
+                progress_bar.progress(100)
+                st.success("✅ Data processing complete!")
+            st.session_state.processing = False
+
+        if stop_pipeline_btn:
+            # Note: In a synchronous Streamlit app, interrupting processing in real time requires more advanced handling.
+            st.warning("⏸️ Processing Stopped.")
+            st.session_state.processing = False
+
+        # --- Next Steps ---
+        st.markdown("### 📈 Next Steps")
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            if st.button("📄 Generate Report"):
+                st.switch_page("pages/report.py")
+
+        with col2:
+            if st.button("🗺️ View Heatmap"):
+                st.switch_page("pages/heatmap.py")
+
+        with col3:
+            if st.button("📊 Engagement & Forecast"):
+                st.switch_page("pages/forecast.py")
+
+        # --- Delete Processed Files ---
         file1_path = os.path.join(PROJECT_DIR, "data_lake/engagement_score", "engagement_score.parquet")
         file2_path = os.path.join(PROJECT_DIR, "data_lake/processed", "mini_final_with_trends.parquet")
         file3_path = os.path.join(PROJECT_DIR, "data_lake/count", "count.parquet")
@@ -148,12 +156,12 @@ if input_string:
                 os.remove(file1_path)
                 os.remove(file2_path)
                 os.remove(file3_path)
-                st.success("Files deleted successfully!")
+                st.success("🗑️ Files deleted successfully!")
                 st.experimental_rerun()
             except Exception as e:
-                st.error(f"Error deleting files: {e}")
+                st.error(f"⚠️ Error deleting files: {e}")
 
         if files_exist():
-            st.write("✅ Processed files are available.")
-            if st.button("Delete Processed Files"):
+            st.warning("Processed files are available.")
+            if st.button("🗑️ Delete Processed Files"):
                 delete_files()

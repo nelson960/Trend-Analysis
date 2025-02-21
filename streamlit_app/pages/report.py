@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from services.data_loader import load_data
-from services.report_generator import generate_brand_report
+from services.report_generator import generate_full_report
 
 st.set_page_config(page_title="Report", layout="wide")
 
@@ -20,7 +20,7 @@ df_count = load_data(count)
 if df_eng is not None and df_final is not None and df_count is not None:
     try:
         # Pass the correct DataFrames to the report generator
-        generate_brand_report(final_processed=df_final, engagement_score=df_eng, brand_counts=df_count)
+        generate_full_report(raw_engagement=df_eng, raw_trend=df_final, raw_mentions=df_count)
     except Exception as e:
         st.error(f"Data loading error: {str(e)}")
 else:

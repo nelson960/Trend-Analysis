@@ -93,8 +93,27 @@ def process_tweets(data: pd.DataFrame, brands: list):
 
 def count_brand_mentions(data: pd.DataFrame) -> pd.DataFrame:
     """
-    Count brand mentions in processed tweets.
+    Count brand mentions per month in processed tweets.
+
+    Assumes the DataFrame has at least:
+      - 'brand': the brand mentioned.
+      - 'date': the tweet date, which will be converted to datetime.
+
+    Returns:
+      A DataFrame with columns for the month, brand, and number of mentions.
     """
-    brand_counts = data['brand'].value_counts().reset_index()
-    brand_counts.columns = ['brand', 'mentions']
+    # Ensure the 'date' column is in datetime format
+    data['date'] = pd.to_datetime(data['date'])
+    
+    # Group by month (using pd.Grouper) and brand, then count mentions
+    brand_counts = (
+        data
+        .groupby([pd.Grouper(key='date', freq='M'), 'brand'])
+        .size()
+        .reset_index(name='mentions')
+    )
+    
+    # Optional: Format the date column to display as "YYYY-MM"
+    brand_counts['date'] = brand_counts['date'].dt.strftime('%Y-%m')
+    
     return brand_counts
