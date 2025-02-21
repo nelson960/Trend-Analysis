@@ -91,16 +91,10 @@ def process_tweets(data: pd.DataFrame, brands: list):
     data = data.dropna(subset=['brand']).reset_index(drop=True)
     return data
 
-def count_brand_mentions(data: pd.DataFrame):
+def count_brand_mentions(data: pd.DataFrame) -> pd.DataFrame:
     """
     Count brand mentions in processed tweets.
-
-    Args:
-        data (pd.DataFrame): Processed tweets DataFrame.
-
-    Returns:
-        str: Brand mention count as a formatted string.
     """
     brand_counts = data['brand'].value_counts().reset_index()
-    brand_counts.columns = ['brand', 'brand_mention_count']
-    return brand_counts.to_string(index=False)
+    brand_counts.columns = ['brand', 'mentions']
+    return brand_counts

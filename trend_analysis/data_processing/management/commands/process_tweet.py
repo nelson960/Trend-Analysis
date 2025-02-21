@@ -4,7 +4,7 @@ from data_processing.services.tweet_processor import process_tweets, count_brand
 from data_processing.services.tweets_cleaner import process_tweets_column
 from data_processing.services.engagement_score import calculate_engagement_score, get_brand_trends
 from data_processing.services.forecast import forecast_trends
-# from streamlit_app.app import visualize_forecast
+
 
 import pandas as pd
 
@@ -27,7 +27,7 @@ class Command(BaseCommand):
 			processed_data = process_tweets(data, brands)
 			self.stdout.write("Counting brand mentions")
 			count = count_brand_mentions(processed_data)
-			self.stdout.write(count)
+			self.stdout.write(count.to_string(index=False))
 			self.stdout.write("Calculating engagement score")
 			data_with_score = calculate_engagement_score(processed_data)
 			#data_with_score.to_parquet("check.parquet", index=False)

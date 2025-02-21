@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import sys
 import plotly.graph_objects as go
+from services.data_loader import load_data
 
 # Django set up
 PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -15,7 +16,6 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 import django
 django.setup()
 from data_processing.services import (
-    load_raw_data,
     process_tweets,
     count_brand_mentions,
     process_tweets_column,  
@@ -37,14 +37,14 @@ if input_string:
     
     # Load data
     raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/temp/mini_tweets_trend_analysis.parquet"
-    raw_data = load_raw_data(raw_data_path)
+    raw_data = load_data(raw_data_path)
     
     # Use the search function with a proper list
     valid_brands, not_available = search_multiple_brands(raw_data, brands)
     
     # Display feedback to the user
     if valid_brands:
-        st.success("Brands is available: " + ", ".join(valid_brands))
+        st.success("Brands available: " + ", ".join(valid_brands))
     else:
         st.info("No matching brands found in the tweets column.")
 
@@ -77,7 +77,8 @@ if input_string:
                     progress_bar.progress(40)
 
                     count = count_brand_mentions(processed_data)
-                    st.write("Brand Mentions Count:", count)
+                    count_F = os.path.join(PROJECT_DIR, "data_lake/count", "count.parquet")
+                    count.to_parquet(count_F, index=False)
                     if not st.session_state.running:
                         return
                     progress_bar.progress(50)
@@ -121,17 +122,23 @@ if input_string:
 
         if st.session_state.pipeline_complete:
             st.write("### Next Steps:")
-            col1, col2 = st.columns(2)
+            col1, col2, col3= st.columns(3)
             with col1:
                 if st.button("Generate Data Report"):
                     st.write("Generating report...")
             with col2:
-                if st.button("Visualize Trends"):
+                if st.button("Visualize Heatmap"):
                     st.write("Loading visualization...")
+                    st.switch_page("pages/heatmap.py")
+            with col3:
+                if st.button("Engagement Analysis and Forecast"):
+                    st.write("Load Analysis")
+                    st.switch_page("pages/forecast.py")
 
         # Define file paths and add functionality to delete processed files
         file1_path = os.path.join(PROJECT_DIR, "data_lake/engagement_score", "engagement_score.parquet")
         file2_path = os.path.join(PROJECT_DIR, "data_lake/processed", "mini_final_with_trends.parquet")
+        file3_path = os.path.join(PROJECT_DIR, "data_lake/count", "count.parquet")
 
         def files_exist():
             return os.path.exists(file1_path) and os.path.exists(file2_path)
@@ -140,6 +147,7 @@ if input_string:
             try:
                 os.remove(file1_path)
                 os.remove(file2_path)
+                os.remove(file3_path)
                 st.success("Files deleted successfully!")
                 st.experimental_rerun()
             except Exception as e:
