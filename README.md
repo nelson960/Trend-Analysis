@@ -35,6 +35,50 @@ Tweets (with metadata) are first retrieved and preprocessed for cleanliness and 
      - 30-day engagement forecast  
 
 ---
+## 🛠️ Tech Stack
+
+- **📝 Natural Language Processing** → SpaCy, NLTK  
+- **📊 Machine Learning** → Scikit-learn, RandomForestRegressor  
+- **📈 Time-Series Forecasting** → Facebook Prophet  
+- **⚡ Data Handling** → Pandas, NumPy, Parquet  
+- **🖥️ Interactive Dashboard** → Streamlit  
+
+---
+
+## 🎯 Why This Matters?
+
+In today’s **fast-paced digital world**, brand perception shifts **rapidly**. This project empowers **businesses & marketers** with **real-time brand analytics** to:
+
+✅ Understand **audience sentiment** in seconds  
+✅ Track **brand health & engagement trends** 📢  
+✅ **Predict the future** of brand engagement 📅  
+✅ Optimize **marketing strategies** with data-driven insights  
+
+---
+
+## 🚀 How to Run
+
+1⃣ **Clone this repository**  
+```bash
+git clone https://github.com/your-repo/twitter-brand-analysis.git
+cd twitter-brand-analysis
+```
+
+2⃣ **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+3⃣ **Run the Streamlit dashboard**
+```bash
+streamlit run app.py
+```
+
+🔥 **Future Enhancements**
+- Implement deep learning models (Transformers, BERT) for sentiment analysis  and engagement score 
+- Add real-time data streaming (Kafka, AWS Kinesis)
+- Extend support to Reddit & YouTube comments for multi-platform tracking
+
 
 **Disclaimer:**  
 This project focuses on analyzing and forecasting brand engagement trends on Twitter. All steps, from data collection to visualization, are intended as a framework for sentiment analysis, engagement scoring, and predictive modeling.

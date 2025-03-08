@@ -1,6 +1,0 @@
-streamlit
-django
-pandas
-textblob
-spacy
-
