@@ -4,6 +4,7 @@ from data_processing.services.tweet_processor import process_tweets, count_brand
 from data_processing.services.tweets_cleaner import process_tweets_column
 from data_processing.services.engagement_score import calculate_engagement_score, get_brand_trends
 from data_processing.services.forecast import forecast_trends
+from data_processing.services.search_engine import  search_multiple_brands
 
 
 import pandas as pd
@@ -19,6 +20,9 @@ class Command(BaseCommand):
 			raw_data_path = "/Users/nelson/py/ml_App/trend-analysis/temp/test_data_set.parquet"
 			self.stdout.write(f"Loading raw data from: {raw_data_path}")
 			raw_data = load_raw_data(raw_data_path)
+			brands = ["apple", "coca-cola", "nike", "samsung", "google", "microsoft", "amazon"]
+			valid_brands, not_available = search_multiple_brands(raw_data, brands)
+			print(valid_brands, not_available)
 			
 			# step 2: process tweets
 			self.stdout.write("Cleaning up tweet and tokenize and remove stopwords")

@@ -53,6 +53,7 @@ INSTALLED_APPS = [
 	'data_ingestion.apps.DataIngestionConfig',
 	'data_processing.apps.DataProcessingConfig',
     'corsheaders',
+    'rest_framework',
 
 ]
 
